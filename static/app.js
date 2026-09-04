@@ -1867,7 +1867,201 @@ async function ingestKnowledge() {
 /* =========================================================
    MULTI-AGENT REVIEW
 ========================================================= */
+function formatAgentReview(data) {
+  if (!data || typeof data !== "object") {
+    return renderMarkdown(
+      typeof data === "string"
+        ? data
+        : "The review workflow completed without a readable result."
+    );
+  }
 
+  const sections = [];
+
+  const prettyName = (key) =>
+    key
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const ignoredKeys = new Set([
+    "provider",
+    "session_id",
+    "sessionId",
+    "status",
+  ]);
+
+  const preferredKeys = [
+    "final",
+    "final_answer",
+    "final_review",
+    "review",
+    "result",
+    "answer",
+    "summary",
+    "plan",
+    "supervisor",
+    "specialist",
+    "critic",
+    "architecture",
+    "security",
+    "product",
+    "recommendations",
+  ];
+
+  const usedKeys = new Set();
+
+  const addSection = (key, value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return;
+    }
+
+    usedKeys.add(key);
+
+    if (typeof value === "string") {
+      sections.push(`
+        <section class="agent-review-section">
+          <div class="agent-review-heading">
+            ${escapeHtml(prettyName(key))}
+          </div>
+
+          <div class="agent-review-content">
+            ${renderMarkdown(value)}
+          </div>
+        </section>
+      `);
+
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      const items = value
+        .map((item) => {
+          if (typeof item === "string") {
+            return `<li>${renderMarkdown(item)}</li>`;
+          }
+
+          return `
+            <li>
+              <pre>${escapeHtml(
+                JSON.stringify(item, null, 2)
+              )}</pre>
+            </li>
+          `;
+        })
+        .join("");
+
+      sections.push(`
+        <section class="agent-review-section">
+          <div class="agent-review-heading">
+            ${escapeHtml(prettyName(key))}
+          </div>
+
+          <ul class="agent-review-list">
+            ${items}
+          </ul>
+        </section>
+      `);
+
+      return;
+    }
+
+    if (typeof value === "object") {
+      const nested = Object.entries(value)
+        .map(([nestedKey, nestedValue]) => {
+          const content =
+            typeof nestedValue === "string"
+              ? renderMarkdown(nestedValue)
+              : `<pre>${escapeHtml(
+                  JSON.stringify(nestedValue, null, 2)
+                )}</pre>`;
+
+          return `
+            <div class="agent-review-subsection">
+              <h4>
+                ${escapeHtml(prettyName(nestedKey))}
+              </h4>
+
+              ${content}
+            </div>
+          `;
+        })
+        .join("");
+
+      sections.push(`
+        <section class="agent-review-section">
+          <div class="agent-review-heading">
+            ${escapeHtml(prettyName(key))}
+          </div>
+
+          <div class="agent-review-content">
+            ${nested}
+          </div>
+        </section>
+      `);
+    }
+  };
+
+  for (const key of preferredKeys) {
+    if (Object.hasOwn(data, key)) {
+      addSection(key, data[key]);
+    }
+  }
+
+  for (const [key, value] of Object.entries(data)) {
+    if (
+      ignoredKeys.has(key) ||
+      usedKeys.has(key)
+    ) {
+      continue;
+    }
+
+    addSection(key, value);
+  }
+
+  const provider =
+    typeof data.provider === "string"
+      ? data.provider
+      : "AI";
+
+  const status =
+    typeof data.status === "string"
+      ? data.status
+      : "Completed";
+
+  return `
+    <div class="agent-review">
+
+      <div class="agent-review-top">
+
+        <div>
+          <span class="agent-review-kicker">
+            MULTI-AGENT REVIEW
+          </span>
+
+          <h3>
+            Review completed
+          </h3>
+        </div>
+
+        <span class="agent-review-badge">
+          ${escapeHtml(provider.toUpperCase())}
+        </span>
+
+      </div>
+
+      <div class="agent-review-status">
+        ${escapeHtml(status)}
+      </div>
+
+      ${sections.join("")}
+
+    </div>
+  `;
+}
 async function runAgentReview() {
 
   const goal =
@@ -1897,9 +2091,12 @@ async function runAgentReview() {
     false;
 
 
-  box.textContent =
-    "Running review workflow…";
-
+  box.innerHTML = `
+  <div class="agent-review-loading">
+    <span class="agent-review-spinner"></span>
+    <span>Running supervisor → specialist → critic workflow...</span>
+  </div>
+`;
 
   try {
 
@@ -1941,25 +2138,21 @@ async function runAgentReview() {
       );
 
 
-    box.textContent =
-      JSON.stringify(
-
-        data,
-
-        null,
-
-        2
-
-      );
+    box.innerHTML =
+  formatAgentReview(data);
 
   }
 
   catch (error) {
 
-    box.textContent =
-      error.message;
+   box.innerHTML = `
+  <div class="agent-review-error">
+    <strong>Review workflow failed</strong>
+    <p>${escapeHtml(error.message)}</p>
+  </div>
+`; 
+}
 
-  }
 }
 
 
