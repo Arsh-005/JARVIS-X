@@ -4,14 +4,25 @@ services:
     runtime: docker
     plan: free
     healthCheckPath: /health
+
     envVars:
       - key: APP_ENV
         value: production
+
       - key: DEBUG
         value: "false"
+
       - key: LLM_PROVIDER
-        value: auto
-      - key: OPENAI_API_KEY
-        sync: false
+        value: gemini
+
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+
       - key: GEMINI_API_KEY
+        sync: false
+
+      - key: JWT_SECRET
+        sync: false
+
+      - key: API_KEY
         sync: false
