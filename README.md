@@ -37,9 +37,7 @@ https://jarvis-x-spjn.onrender.com
 
 ### Mobile Interface
 
-<p align="center">
-  <img src="screenshots/jarvis-mobile.png" width="350" alt="JARVIS-X Mobile Interface">
-</p>
+<img src="screenshots/jarvis-mobile.png" width="350" alt="JARVIS-X Mobile Interface">
 # ✨ Core Features
 
 ## 🤖 Conversational AI
