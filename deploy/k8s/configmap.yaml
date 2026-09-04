@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jarvis-x-config
+data:
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  DATABASE_URL: postgresql+asyncpg://jarvis:jarvis@postgres:5432/jarvis
+  REDIS_URL: redis://redis:6379/0
+  QDRANT_URL: http://qdrant:6333
+  REQUIRE_CONFIRMATION_FOR_WRITES: "true"
+  ENABLE_LOCAL_COMPUTER_TOOLS: "false"

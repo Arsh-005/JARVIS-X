@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis-x-enterprise"
+version = "3.0.0"
+description = "Production-grade reference architecture for a multimodal agentic AI assistant"
+readme = "README.md"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.30,<1",
+  "pydantic>=2.8,<3",
+  "pydantic-settings>=2.4,<3",
+  "httpx>=0.27,<1",
+  "python-multipart>=0.0.9,<1",
+  "pypdf>=5,<7",
+  "python-docx>=1.1,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9", "pytest-asyncio>=0.24,<1", "ruff>=0.6,<1", "mypy>=1.11,<2"]
+desktop = ["pyautogui>=0.9.54,<1", "Pillow>=10,<12"]
+vector = ["qdrant-client>=1.12,<2"]
+redis = ["redis>=5,<6"]
+postgres = ["sqlalchemy[asyncio]>=2.0,<3", "asyncpg>=0.29,<1", "alembic>=1.13,<2"]
+auth = ["PyJWT>=2.9,<3"]
+observability = ["prometheus-client>=0.21,<1", "opentelemetry-api>=1.27,<2", "opentelemetry-sdk>=1.27,<2"]
+enterprise = [
+  "qdrant-client>=1.12,<2",
+  "redis>=5,<6",
+  "sqlalchemy[asyncio]>=2.0,<3",
+  "asyncpg>=0.29,<1",
+  "alembic>=1.13,<2",
+  "PyJWT>=2.9,<3",
+  "prometheus-client>=0.21,<1",
+  "opentelemetry-api>=1.27,<2",
+  "opentelemetry-sdk>=1.27,<2",
+]
+all = [
+  "pyautogui>=0.9.54,<1", "Pillow>=10,<12",
+  "qdrant-client>=1.12,<2", "redis>=5,<6",
+  "sqlalchemy[asyncio]>=2.0,<3", "asyncpg>=0.29,<1", "alembic>=1.13,<2",
+  "PyJWT>=2.9,<3", "prometheus-client>=0.21,<1",
+  "opentelemetry-api>=1.27,<2", "opentelemetry-sdk>=1.27,<2",
+]
+
+[project.scripts]
+jarvis = "jarvis.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true

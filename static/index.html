@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b12" />
+
+  <title>JARVIS-X — Agentic AI Workspace</title>
+
+  <link rel="stylesheet" href="/static/style.css?v=4" />
+</head>
+
+<body>
+
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div class="app-shell">
+
+    <!-- =========================================================
+         SIDEBAR
+    ========================================================== -->
+
+    <aside class="sidebar" id="sidebar">
+
+      <div class="brand-row">
+
+        <div class="jarvis-orb" aria-hidden="true">
+          <span></span>
+        </div>
+
+        <div class="brand-copy">
+          <strong>JARVIS-X</strong>
+          <small>AGENTIC INTELLIGENCE</small>
+        </div>
+
+        <button
+          class="icon-button mobile-only"
+          id="closeSidebar"
+          type="button"
+          aria-label="Close sidebar"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <!-- New Chat -->
+
+      <button
+        class="new-chat"
+        id="newChat"
+        type="button"
+      >
+        <span>＋</span>
+
+        <b>New conversation</b>
+
+        <kbd>Ctrl K</kbd>
+      </button>
+
+
+      <!-- Navigation -->
+
+      <nav
+        class="nav-stack"
+        aria-label="Workspace navigation"
+      >
+
+        <button
+          class="nav-item active"
+          data-panel="chatPanel"
+          type="button"
+        >
+          <span>✦</span>
+          <b>Intelligence</b>
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-panel="knowledgePanel"
+          type="button"
+        >
+          <span>⌁</span>
+          <b>Knowledge</b>
+        </button>
+
+
+        <button
+          class="nav-item"
+          data-panel="agentsPanel"
+          type="button"
+        >
+          <span>◎</span>
+          <b>Multi-Agent</b>
+        </button>
+
+      </nav>
+
+
+      <!-- Capabilities -->
+
+      <div class="sidebar-section">
+
+        <div class="section-label">
+          CAPABILITIES
+        </div>
+
+
+        <div class="capability">
+          <span>◫</span>
+
+          <div>
+            <b>Documents</b>
+            <small>PDF · DOCX · TXT · CSV</small>
+          </div>
+        </div>
+
+
+        <div class="capability">
+          <span>⌁</span>
+
+          <div>
+            <b>Knowledge</b>
+            <small>Private RAG retrieval</small>
+          </div>
+        </div>
+
+
+        <div class="capability">
+          <span>◌</span>
+
+          <div>
+            <b>Voice</b>
+            <small>Speech input & replies</small>
+          </div>
+        </div>
+
+
+        <div class="capability">
+          <span>◎</span>
+
+          <div>
+            <b>Agents</b>
+            <small>Multi-step AI workflows</small>
+          </div>
+        </div>
+
+
+        <div class="capability">
+          <span>▷</span>
+
+          <div>
+            <b>Media</b>
+            <small>Audio & video uploads</small>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Connection Status -->
+
+      <div class="connection-card">
+
+        <div class="connection-line">
+
+          <span
+            class="status-dot"
+            id="statusDot"
+          ></span>
+
+          <b id="health">
+            Connecting
+          </b>
+
+        </div>
+
+
+        <div class="connection-meta">
+
+          <span id="provider">
+            provider
+          </span>
+
+          <span>
+            AI routing ready
+          </span>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+
+
+    <!-- =========================================================
+         MAIN WORKSPACE
+    ========================================================== -->
+
+    <main class="workspace">
+
+
+      <!-- Top Bar -->
+
+      <header class="topbar">
+
+        <button
+          class="icon-button desktop-hidden"
+          id="openSidebar"
+          type="button"
+          aria-label="Open sidebar"
+        >
+          ☰
+        </button>
+
+
+        <div class="model-pill">
+
+          <span class="pulse-dot"></span>
+
+          <span id="modelLabel">
+            AUTO ROUTING
+          </span>
+
+          <b>⌄</b>
+
+        </div>
+
+
+        <div class="top-actions">
+
+          <span
+            class="session-pill"
+            id="session"
+          ></span>
+
+
+          <button
+            class="icon-button"
+            id="clearChat"
+            type="button"
+            title="Clear conversation"
+          >
+            ↻
+          </button>
+
+        </div>
+
+      </header>
+
+
+
+      <!-- =====================================================
+           CHAT PANEL
+      ====================================================== -->
+
+      <section
+        id="chatPanel"
+        class="panel visible chat-panel"
+      >
+
+
+        <div
+          class="chat-scroll"
+          id="chatScroll"
+        >
+
+
+          <div
+            class="conversation"
+            id="chat"
+          >
+
+
+            <!-- Welcome Screen -->
+
+            <div
+              class="welcome"
+              id="welcome"
+            >
+
+              <div class="welcome-orb">
+                <span></span>
+              </div>
+
+
+              <div class="eyebrow">
+                JARVIS-X ONLINE
+              </div>
+
+
+              <h1>
+                What are we building today?
+              </h1>
+
+
+              <p>
+                Reason across conversations, documents,
+                audio, private knowledge and agent workflows
+                from one intelligent workspace.
+              </p>
+
+
+
+              <!-- Starter Cards -->
+
+              <div class="starter-grid">
+
+
+                <button
+                  class="starter"
+                  data-prompt="Explain this project architecture and suggest production improvements."
+                  type="button"
+                >
+
+                  <span>⌘</span>
+
+                  <div>
+                    <b>Review architecture</b>
+                    <small>Analyze a codebase or system</small>
+                  </div>
+
+                  <i>→</i>
+
+                </button>
+
+
+
+                <button
+                  class="starter"
+                  data-prompt="Help me research this topic using the documents I upload."
+                  type="button"
+                >
+
+                  <span>⌁</span>
+
+                  <div>
+                    <b>Research files</b>
+                    <small>Use RAG over attachments</small>
+                  </div>
+
+                  <i>→</i>
+
+                </button>
+
+
+
+                <button
+                  class="starter"
+                  data-prompt="Analyze the document I attach, summarize it and identify the most important information."
+                  type="button"
+                >
+
+                  <span>◫</span>
+
+                  <div>
+                    <b>Analyze document</b>
+                    <small>PDF, DOCX, TXT or CSV</small>
+                  </div>
+
+                  <i>→</i>
+
+                </button>
+
+
+
+                <button
+                  class="starter"
+                  data-prompt="Break this goal into a robust multi-agent execution plan."
+                  type="button"
+                >
+
+                  <span>◎</span>
+
+                  <div>
+                    <b>Plan a complex goal</b>
+                    <small>
+                      Supervisor + specialist + critic
+                    </small>
+                  </div>
+
+                  <i>→</i>
+
+                </button>
+
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- ===================================================
+             CHAT COMPOSER
+        ==================================================== -->
+
+        <div class="composer-wrap">
+
+
+          <div
+            class="drop-zone"
+            id="dropZone"
+          >
+
+
+            <!-- Selected Attachments -->
+
+            <div
+              class="attachment-strip"
+              id="attachmentStrip"
+              hidden
+            ></div>
+
+
+
+            <!-- Prompt -->
+
+            <textarea
+              id="prompt"
+              rows="1"
+              placeholder="Message JARVIS-X…"
+              aria-label="Message JARVIS-X"
+            ></textarea>
+
+
+
+            <!-- Composer Tools -->
+
+            <div class="composer-toolbar">
+
+
+              <div class="tool-group">
+
+
+                <!-- Attachment Button -->
+
+                <button
+                  class="tool-button attach-button"
+                  id="attachButton"
+                  type="button"
+                  title="Attach document, code, audio or video"
+                >
+                  <span>＋</span>
+                </button>
+
+
+
+                <!--
+                  IMAGE TYPES REMOVED.
+
+                  Supported:
+                  PDF
+                  DOCX
+                  TXT
+                  Markdown
+                  JSON
+                  CSV
+                  Code
+                  YAML/XML
+                  Audio
+                  Video
+                -->
+
+                <input
+                  id="fileInput"
+                  type="file"
+                  multiple
+                  hidden
+                  accept="
+                  .pdf,
+                  .docx,
+                  .txt,
+                  .md,
+                  .json,
+                  .csv,
+                  .py,
+                  .js,
+                  .ts,
+                  .html,
+                  .css,
+                  .yaml,
+                  .yml,
+                  .xml,
+                  audio/*,
+                  video/*
+                  "
+                />
+
+
+
+                <!-- Microphone -->
+
+                <button
+                  class="tool-button"
+                  id="micButton"
+                  type="button"
+                  title="Voice input"
+                >
+                  🎙
+                </button>
+
+
+
+                <!-- Spoken Replies -->
+
+                <button
+                  class="tool-button active"
+                  id="speakerButton"
+                  type="button"
+                  title="Toggle spoken replies"
+                >
+                  🔊
+                </button>
+
+
+
+                <!-- RAG -->
+
+                <button
+                  class="mode-button"
+                  id="ragToggle"
+                  type="button"
+                >
+                  <span>⌁</span>
+                  Knowledge
+                </button>
+
+
+
+                <!-- Agent Mode -->
+
+                <button
+                  class="mode-button"
+                  id="agentToggle"
+                  type="button"
+                >
+                  <span>◎</span>
+                  Agent
+                </button>
+
+              </div>
+
+
+
+              <div class="send-group">
+
+
+                <span
+                  class="mini-status"
+                  id="voiceStatus"
+                  data-state="idle"
+                >
+                  READY
+                </span>
+
+
+                <button
+                  class="send-button"
+                  id="send"
+                  type="button"
+                  title="Send"
+                >
+                  <span>↑</span>
+                </button>
+
+              </div>
+
+
+            </div>
+
+          </div>
+
+
+          <p class="composer-note">
+            Enter to send · Shift+Enter for a new line ·
+            Drop documents, code, audio or video
+          </p>
+
+        </div>
+
+
+      </section>
+
+
+
+      <!-- =====================================================
+           KNOWLEDGE PANEL
+      ====================================================== -->
+
+      <section
+        id="knowledgePanel"
+        class="panel utility-panel"
+      >
+
+
+        <div class="utility-head">
+
+          <div>
+
+            <div class="eyebrow">
+              PRIVATE KNOWLEDGE
+            </div>
+
+
+            <h2>
+              Knowledge ingestion
+            </h2>
+
+
+            <p>
+              Add project notes or reference material to
+              JARVIS-X's local RAG store.
+            </p>
+
+          </div>
+
+
+          <span class="feature-badge">
+            RAG
+          </span>
+
+        </div>
+
+
+
+        <div class="glass-card form-card">
+
+
+          <label>
+
+            Document title
+
+            <input
+              id="docTitle"
+              placeholder="e.g. Product architecture notes"
+            />
+
+          </label>
+
+
+
+          <label>
+
+            Content
+
+            <textarea
+              id="docText"
+              rows="12"
+              placeholder="Paste notes, documentation or project context…"
+            ></textarea>
+
+          </label>
+
+
+
+          <div class="form-actions">
+
+
+            <button
+              class="secondary-button"
+              id="knowledgeUpload"
+              type="button"
+            >
+              ＋ Upload document
+            </button>
+
+
+            <button
+              class="primary-button"
+              id="ingestButton"
+              type="button"
+            >
+              Ingest into RAG
+            </button>
+
+
+          </div>
+
+
+
+          <pre
+            id="ingestResult"
+            class="result-box"
+            hidden
+          ></pre>
+
+
+        </div>
+
+      </section>
+
+
+
+      <!-- =====================================================
+           MULTI AGENT PANEL
+      ====================================================== -->
+
+      <section
+        id="agentsPanel"
+        class="panel utility-panel"
+      >
+
+
+        <div class="utility-head">
+
+          <div>
+
+            <div class="eyebrow">
+              REVIEW WORKFLOW
+            </div>
+
+
+            <h2>
+              Multi-Agent Studio
+            </h2>
+
+
+            <p>
+              Send complex work through a supervisor,
+              specialist and critic workflow.
+            </p>
+
+          </div>
+
+
+          <span class="feature-badge">
+            3 AGENTS
+          </span>
+
+        </div>
+
+
+
+        <div class="glass-card form-card">
+
+
+          <label>
+
+            Goal
+
+            <textarea
+              id="agentGoal"
+              rows="10"
+              placeholder="Describe the complex goal for the agent team…"
+            ></textarea>
+
+          </label>
+
+
+
+          <div class="form-actions">
+
+
+            <span class="subtle">
+              Supervisor → Specialist → Critic
+            </span>
+
+
+            <button
+              class="primary-button"
+              id="agentRunButton"
+              type="button"
+            >
+              Run review workflow
+            </button>
+
+
+          </div>
+
+
+
+          <pre
+            id="agentResult"
+            class="result-box"
+            hidden
+          ></pre>
+
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       TOASTS
+  ========================================================== -->
+
+  <div
+    class="toast-stack"
+    id="toastStack"
+    aria-live="polite"
+  ></div>
+
+
+
+  <!-- Cache-busting version added -->
+
+  <script src="/static/app.js?v=4"></script>
+
+</body>
+</html>

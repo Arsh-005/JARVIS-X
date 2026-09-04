@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jarvis-x
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: jarvis-x}
+  template:
+    metadata:
+      labels: {app: jarvis-x}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: api
+          image: ghcr.io/YOUR_USERNAME/jarvis-x:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef: {name: jarvis-x-config}
+            - secretRef: {name: jarvis-x-secrets}
+          readinessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: {cpu: "250m", memory: "256Mi"}
+            limits: {cpu: "1", memory: "1Gi"}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities: {drop: ["ALL"]}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jarvis-x
+spec:
+  selector: {app: jarvis-x}
+  ports:
+    - port: 80
+      targetPort: 8000
