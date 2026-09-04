@@ -21,7 +21,25 @@ https://jarvis-x-spjn.onrender.com
 > The current deployment uses Render's free infrastructure. The first request after inactivity may take longer while the service starts.
 
 ---
+## Screenshots
 
+### Main Chat
+
+![JARVIS-X Chat Interface](screenshots/jarvis-chat.png)
+
+### Document RAG
+
+![JARVIS-X RAG](screenshots/jarvis-rag.png)
+
+### Multi-Agent Studio
+
+![JARVIS-X Multi-Agent Studio](screenshots/jarvis-multi-agent.png)
+
+### Mobile Interface
+
+<p align="center">
+  <img src="screenshots/jarvis-mobile.png" width="350" alt="JARVIS-X Mobile Interface">
+</p>
 # ✨ Core Features
 
 ## 🤖 Conversational AI
