@@ -1,5 +1,7 @@
+import asyncio
 import base64
 import json
+import random
 import re
 from abc import ABC, abstractmethod
 from typing import Any
@@ -23,7 +25,18 @@ class LLMProvider(ABC):
         messages: list[ChatMessage],
         system: str = "",
     ) -> str:
-        raise NotImplementedError
+        """Return a safe local response for providers without a backend.
+
+        Concrete providers override this method with their API-specific
+        implementation, while the default keeps the base class usable for
+        lightweight or test providers.
+        """
+        last = messages[-1].content if messages else ""
+
+        return (
+            "No remote language model is configured for this provider. "
+            f"I received: {last}"
+        )
 
     async def vision(
         self,
@@ -436,116 +449,176 @@ class GeminiProvider(LLMProvider):
             if message.role in {"system", "tool"}:
                 continue
 
-            role = (
-                "model"
-                if message.role == "assistant"
-                else "user"
-            )
+            role = "model" if message.role == "assistant" else "user"
 
             contents.append(
                 {
                     "role": role,
-                    "parts": [
-                        {
-                            "text": message.content,
-                        }
-                    ],
+                    "parts": [{"text": message.content}],
                 }
             )
 
         payload: dict[str, Any] = {
             "contents": contents,
             "generationConfig": {
-                "temperature": (
-                    self.settings.llm_temperature
-                )
+                "temperature": self.settings.llm_temperature,
             },
         }
 
         if system:
             payload["systemInstruction"] = {
-                "parts": [
-                    {
-                        "text": system,
-                    }
-                ]
+                "parts": [{"text": system}],
             }
 
-        model = self.settings.gemini_model
+        # Primary model comes from GEMINI_MODEL.
+        # Stable fallback models are tried if the primary model
+        # remains temporarily unavailable.
+        models = [
+            self.settings.gemini_model,
+            "gemini-3.7-flash",
+            "gemini-3.6-flash",
+            "gemini-3.5-flash",
+            "gemini-3.5-flash-lite",
+        ]
 
-        url = (
-            "https://generativelanguage.googleapis.com/"
-            f"v1beta/models/{model}:generateContent"
-            f"?key={self.settings.gemini_api_key}"
-        )
+        # Remove duplicates while preserving order.
+        models = list(dict.fromkeys(models))
 
-        try:
-            async with httpx.AsyncClient(
-                timeout=self.settings.llm_timeout_seconds
-            ) as client:
-                response = await client.post(
-                    url,
-                    json=payload,
+        retryable_statuses = {408, 429, 500, 502, 503, 504}
+
+        errors: list[str] = []
+
+        async with httpx.AsyncClient(
+            timeout=self.settings.llm_timeout_seconds
+        ) as client:
+            for model in models:
+                url = (
+                    "https://generativelanguage.googleapis.com/"
+                    f"v1beta/models/{model}:generateContent"
+                    f"?key={self.settings.gemini_api_key}"
                 )
 
-        except httpx.TimeoutException as exc:
-            raise LLMError(
-                "Gemini request timed out."
-            ) from exc
+                # Three attempts for each model.
+                for attempt in range(3):
+                    try:
+                        response = await client.post(
+                            url,
+                            json=payload,
+                        )
 
-        except httpx.ConnectError as exc:
-            raise LLMError(
-                "Could not connect to Google Gemini."
-            ) from exc
+                    except httpx.TimeoutException:
+                        errors.append(
+                            f"{model}: timeout on attempt {attempt + 1}"
+                        )
 
-        except httpx.HTTPError as exc:
-            raise LLMError(
-                f"Gemini HTTP error: {exc}"
-            ) from exc
+                        if attempt < 2:
+                            delay = (2**attempt) + random.uniform(0, 0.5)
+                            await asyncio.sleep(delay)
+                            continue
 
-        if response.is_error:
-            raise LLMError(
-                f"Gemini error {response.status_code}: "
-                f"{response.text[:1000]}"
-            )
+                        break
 
-        try:
-            data = response.json()
+                    except httpx.ConnectError:
+                        errors.append(
+                            f"{model}: connection error on "
+                            f"attempt {attempt + 1}"
+                        )
 
-        except ValueError as exc:
-            raise LLMError(
-                "Gemini returned invalid JSON."
-            ) from exc
+                        if attempt < 2:
+                            delay = (2**attempt) + random.uniform(0, 0.5)
+                            await asyncio.sleep(delay)
+                            continue
 
-        try:
-            parts = (
-                data["candidates"][0]
-                ["content"]["parts"]
-            )
+                        break
 
-            text_parts = [
-                part["text"]
-                for part in parts
-                if isinstance(part, dict)
-                and isinstance(part.get("text"), str)
-            ]
+                    except httpx.HTTPError as exc:
+                        errors.append(
+                            f"{model}: HTTP client error: {exc}"
+                        )
+                        break
 
-            if text_parts:
-                return "\n".join(text_parts)
+                    if response.is_error:
+                        status = response.status_code
 
-        except (
-            KeyError,
-            IndexError,
-            TypeError,
-        ) as exc:
-            raise LLMError(
-                f"Unexpected Gemini response: {data}"
-            ) from exc
+                        errors.append(
+                            f"{model}: HTTP {status}"
+                        )
+
+                        if status in retryable_statuses:
+                            if attempt < 2:
+                                delay = (
+                                    (2**attempt)
+                                    + random.uniform(0, 0.5)
+                                )
+                                await asyncio.sleep(delay)
+                                continue
+
+                            # This model remained unavailable.
+                            # Move to the next fallback model.
+                            break
+
+                        # 400/401/403 etc. normally indicate a
+                        # configuration/request problem. Do not
+                        # repeatedly hammer the API.
+                        raise LLMError(
+                            f"Gemini request failed with HTTP {status}: "
+                            f"{response.text[:500]}"
+                        )
+
+                    try:
+                        data = response.json()
+
+                    except ValueError:
+                        errors.append(
+                            f"{model}: invalid JSON response"
+                        )
+                        break
+
+                    try:
+                        candidates = data["candidates"]
+
+                        if not candidates:
+                            errors.append(
+                                f"{model}: no candidates returned"
+                            )
+                            break
+
+                        parts = candidates[0]["content"]["parts"]
+
+                        text_parts = [
+                            part["text"]
+                            for part in parts
+                            if isinstance(part, dict)
+                            and isinstance(part.get("text"), str)
+                            and part["text"].strip()
+                        ]
+
+                        if text_parts:
+                            return "\n".join(text_parts)
+
+                        errors.append(
+                            f"{model}: response contained no text"
+                        )
+                        break
+
+                    except (
+                        KeyError,
+                        IndexError,
+                        TypeError,
+                    ):
+                        errors.append(
+                            f"{model}: unexpected response structure"
+                        )
+                        break
+
+        summary = "; ".join(errors[-10:])
 
         raise LLMError(
-            f"Gemini returned no usable text: {data}"
+            "JARVIS-X could not reach an available Gemini model "
+            "after automatic retries and model fallback. "
+            "Please try again shortly. "
+            f"Attempts: {summary}"
         )
-
     async def vision(
         self,
         image_bytes: bytes,
