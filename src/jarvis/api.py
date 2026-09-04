@@ -37,7 +37,7 @@ response_cache = TTLCache(max_items=256, ttl_seconds=180)
 request_bucket = TokenBucket(
     rate_per_second=settings.rate_limit_per_minute / 60.0, capacity=float(settings.rate_limit_per_minute)
 )
-static_dir = Path(__file__).resolve().parents[2] / "static"
+static_dir = Path.cwd() / "static"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
